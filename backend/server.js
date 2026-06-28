@@ -26,7 +26,6 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/cart',     require('./routes/cart'));
 app.use('/api/orders',   require('./routes/orders'));
 // TODO (P20): Mount auth routes     → app.use('/api/auth',     require('./routes/auth'));
-// TODO (P20): Mount auth routes     → app.use('/api/auth',     require('./routes/auth'));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -34,7 +33,10 @@ app.get('/health', (req, res) => {
 });
 
 // ─── Error Handling ───────────────────────────────────────────────────────────
-// TODO (P17): Mount error handler middleware
+const { notFoundHandler, validationErrorHandler, generalErrorHandler } = require('./middleware/errorHandler');
+app.use(notFoundHandler);
+app.use(validationErrorHandler);
+app.use(generalErrorHandler);
 
 // ─── Database Connection ──────────────────────────────────────────────────────
 const connectDB = async () => {

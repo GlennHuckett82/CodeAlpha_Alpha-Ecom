@@ -1,9 +1,40 @@
-// Placeholder — Error handling middleware implemented in P17
-// Handles: 404 Not Found, 422 Validation errors, 500 General errors
+﻿'use strict';
 
-// eslint-disable-next-line no-unused-vars
-const errorHandler = (err, req, res, next) => {
-  // TODO: implement in P17
+/**
+ * notFoundHandler - catches any request that reaches this point without
+ * a matching route and replies with a uniform 404 JSON response.
+ */
+const notFoundHandler = (req, res) => {
+  res.status(404).json({ success: false, error: 'Not found' });
 };
 
-module.exports = errorHandler;
+/**
+ * validationErrorHandler - handles validation errors.
+ * Only intercepts errors with statusCode 422 AND an errors array;
+ * everything else is forwarded to generalErrorHandler.
+ */
+const validationErrorHandler = (err, req, res, next) => {
+  if (err.statusCode === 422 && Array.isArray(err.errors)) {
+    return res.status(422).json({ success: false, errors: err.errors });
+  }
+  return next(err);
+};
+
+/**
+ * generalErrorHandler - last-resort 500 handler.
+ * Logs the full stack in non-production environments only.
+ */
+// eslint-disable-next-line no-unused-vars
+const generalErrorHandler = (err, req, res, next) => {
+  if (process.env.NODE_ENV !== 'test') {
+    // eslint-disable-next-line no-console
+    console.error('[Server Error]', err.stack || err.message);
+  }
+  const isProduction = process.env.NODE_ENV === 'production';
+  const message = isProduction
+    ? 'An internal server error occurred'
+    : (err.message || 'An internal server error occurred');
+  return res.status(500).json({ success: false, error: message });
+};
+
+module.exports = { notFoundHandler, validationErrorHandler, generalErrorHandler };
