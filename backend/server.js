@@ -7,6 +7,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -32,7 +33,19 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10kb' }));
 
+// ─── Rate Limiting ─────────────────────────────────────────────────────────
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,   // Return rate-limit info in RateLimit-* headers
+  legacyHeaders: false,    // Disable X-RateLimit-* headers
+  message: { success: false, error: 'Too many requests, please try again later.' },
+  // Skip rate limiting during automated tests so the suite never trips the limit
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api', apiLimiter);
 app.use('/api/products', require('./routes/products'));
 app.use('/api/cart',     require('./routes/cart'));
 app.use('/api/orders',   require('./routes/orders'));
