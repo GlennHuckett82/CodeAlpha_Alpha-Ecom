@@ -1,0 +1,64 @@
+'use strict';
+
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+
+const app = express();
+
+// ─── Security & Utility Middleware ───────────────────────────────────────────
+app.use(helmet());
+app.use(compression());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(cors({
+  origin: (process.env.CORS_ORIGIN || 'http://localhost:5500').split(','),
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(express.json({ limit: '10kb' }));
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/products', require('./routes/products'));
+app.use('/api/cart',     require('./routes/cart'));
+app.use('/api/orders',   require('./routes/orders'));
+// TODO (P20): Mount auth routes     → app.use('/api/auth',     require('./routes/auth'));
+// TODO (P20): Mount auth routes     → app.use('/api/auth',     require('./routes/auth'));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
+});
+
+// ─── Error Handling ───────────────────────────────────────────────────────────
+// TODO (P17): Mount error handler middleware
+
+// ─── Database Connection ──────────────────────────────────────────────────────
+const connectDB = async () => {
+  const uri = process.env.MONGO_URI;
+  if (!uri) throw new Error('MONGO_URI is not defined in environment variables');
+  await mongoose.connect(uri);
+  console.log('MongoDB connected');
+};
+
+// ─── Server Bootstrap ────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+
+// Export app before listen so Supertest can import without starting the server
+module.exports = app;
+
+if (require.main === module) {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to start server:', err.message);
+      process.exit(1);
+    });
+}
