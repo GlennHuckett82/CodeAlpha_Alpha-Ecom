@@ -18,6 +18,8 @@ afterEach(async () => {
   await Promise.all(
     Object.values(collections).map((collection) => collection.deleteMany({})),
   );
+  // Flush the in-memory response cache so cached responses never bleed between tests
+  require('../middleware/cache').flushCache();
 });
 
 // Disconnect Mongoose and stop the in-memory server after all tests in the file

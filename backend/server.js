@@ -44,12 +44,17 @@ const apiLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
+// ─── Response Cache ──────────────────────────────────────────────────────────
+const { createCache } = require('./middleware/cache');
+const productCache = createCache(60); // 60-second TTL
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api', apiLimiter);
-app.use('/api/products', require('./routes/products'));
+app.use('/api/products', productCache, require('./routes/products'));
 app.use('/api/cart',     require('./routes/cart'));
 app.use('/api/orders',   require('./routes/orders'));
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth',     require('./routes/auth'));
+app.use('/api/admin',    require('./routes/admin'));
 
 // Health check
 app.get('/health', (req, res) => {
