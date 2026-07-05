@@ -11,6 +11,7 @@
  */
 
 import api from './api.js';
+import { debounce } from './utils.js';
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 
@@ -36,19 +37,6 @@ const currency = new Intl.NumberFormat('en-GB', { style: 'currency', currency: '
 
 function formatPrice(value) {
   return currency.format(Number(value));
-}
-
-/**
- * Returns a debounced version of `fn` that only fires after `ms` ms of silence.
- * @param {Function} fn
- * @param {number} ms
- */
-function debounce(fn, ms) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
-  };
 }
 
 // ── ARIA live region ───────────────────────────────────────────────────────
@@ -215,7 +203,8 @@ function syncUrl() {
   currentCategory
     ? url.searchParams.set('category', currentCategory)
     : url.searchParams.delete('category');
-  window.history.replaceState(null, '', url.toString());
+  // pushState so browser back/forward navigation works
+  window.history.pushState({ page: currentPage, search: currentSearch, category: currentCategory }, '', url.toString());
 }
 
 function readUrlParams() {
@@ -281,14 +270,42 @@ function wirePagination() {
 }
 
 function wireSearch() {
-  searchInput.addEventListener(
-    'input',
-    debounce((e) => {
-      currentSearch = e.target.value.trim();
-      currentPage   = 1; // reset to page 1 on new search
-      fetchAndRender();
-    }, 300),
-  );
+  // ── Clear (×) button ────────────────────────────────────────────
+  const clearBtn = document.createElement('button');
+  clearBtn.type      = 'button';
+  clearBtn.className = 'btn btn-secondary search-clear-btn';
+  clearBtn.setAttribute('aria-label', 'Clear search');
+  clearBtn.textContent = '×'; // × multiplication sign — visually an ×
+  clearBtn.hidden = !searchInput.value; // pre-show if URL already has a query
+  searchInput.insertAdjacentElement('afterend', clearBtn);
+
+  function updateClearVisibility() {
+    clearBtn.hidden = !searchInput.value;
+  }
+
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    clearBtn.hidden   = true;
+    currentSearch     = '';
+    currentPage       = 1;
+    fetchAndRender();
+    searchInput.focus(); // return focus to the input for keyboard users
+  });
+
+  // ── Debounced search handler ─────────────────────────────────
+  const debouncedFetch = debounce((value) => {
+    const trimmed = value.trim();
+    // Require at least 2 chars to trigger a search; 0 chars clears the search
+    if (trimmed.length === 1) return; // wait for more input
+    currentSearch = trimmed;
+    currentPage   = 1;
+    fetchAndRender();
+  }, 300);
+
+  searchInput.addEventListener('input', (e) => {
+    updateClearVisibility();
+    debouncedFetch(e.target.value);
+  });
 }
 
 function wireCategory() {
@@ -309,5 +326,12 @@ export function initProductListing() {
   wirePagination();
   wireSearch();
   wireCategory();
+
+  // Restore state on browser back/forward navigation
+  window.addEventListener('popstate', () => {
+    readUrlParams();
+    fetchAndRender();
+  });
+
   fetchAndRender();
 }

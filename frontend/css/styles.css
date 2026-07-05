@@ -388,6 +388,19 @@ small {
   border-color: var(--color-primary);
 }
 
+/* Clear (×) button — compact, only visible when search has a value */
+.search-clear-btn {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: var(--border-radius);
+}
+
+.search-clear-btn[hidden] {
+  display: none;
+}
+
 /* ── Product grid ────────────────────────────────────────────────────────── */
 
 #product-grid {
