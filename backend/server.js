@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path'); // Node built-in — needed for static file serving
 
 const app = express();
 
@@ -48,8 +49,30 @@ const apiLimiter = rateLimit({
 const { createCache } = require('./middleware/cache');
 const productCache = createCache(60); // 60-second TTL
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
+// ─── Static Files (frontend) ────────────────────────────────────────
+// Cache-Control strategy for static assets:
+//  • HTML  → no-cache  (always revalidate — shell may change on each deploy)
+//  • CSS/JS → public, max-age=31536000, immutable (1-year; URLs carry ?v=hash)
+app.use(
+  express.static(path.join(__dirname, '..', 'frontend'), {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else if (filePath.endsWith('.css') || filePath.endsWith('.js')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }),
+);
+
+// ─── Routes ─────────────────────────────────────────────────────────
 app.use('/api', apiLimiter);
+// Set Cache-Control for public product GET responses before the server-side
+// cache so the header is present on both cached and freshly-fetched replies.
+app.use('/api/products', (req, res, next) => {
+  if (req.method === 'GET') res.setHeader('Cache-Control', 'public, max-age=60');
+  next();
+});
 app.use('/api/products', productCache, require('./routes/products'));
 app.use('/api/cart',     require('./routes/cart'));
 app.use('/api/orders',   require('./routes/orders'));

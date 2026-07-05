@@ -22,9 +22,14 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' };
  * @throws {Error} With server error message on non-2xx, or network failure
  */
 async function request(path, options = {}) {
+  // Use the browser HTTP cache for GET requests (revalidate when stale);
+  // bypass it entirely for mutations so stale data is never returned after
+  // a POST/PUT/DELETE.
+  const method = (options.method || 'GET').toUpperCase();
+  const fetchOptions = { cache: method === 'GET' ? 'default' : 'no-store', ...options };
   let response;
   try {
-    response = await fetch(`${BASE}${path}`, options);
+    response = await fetch(`${BASE}${path}`, fetchOptions);
   } catch (networkError) {
     // fetch() only rejects on network failure (no connection, DNS, etc.)
     throw new Error('Network error — please check your connection.');
