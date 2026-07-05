@@ -13,6 +13,7 @@
 
 import { getCart, updateItem, removeItem, getSessionId } from './cartState.js';
 import './header.js'; // badge side-effect
+import { initOrderForm } from './order.js';
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 
@@ -286,6 +287,7 @@ async function init() {
   } catch (err) {
     announce(`Failed to load cart: ${err.message}`);
   }
+  initOrderForm(); // wire form validation + submission (no-op if form absent)
 }
 
 init();
