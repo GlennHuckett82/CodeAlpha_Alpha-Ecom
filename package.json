@@ -2,14 +2,17 @@
   "name": "alpha-ecom",
   "private": true,
   "scripts": {
-    "build:js":     "node scripts/esbuild.config.js --production",
-    "build:js:dev": "node scripts/esbuild.config.js --dev",
-    "build:css":    "cleancss -o dist/css/styles.min.css frontend/css/styles.css",
-    "build:html":   "node scripts/build-html.js",
-    "build":        "npm-run-all --parallel build:js build:css build:html",
-    "build:dev":    "npm-run-all --parallel build:js:dev build:css build:html"
+    "build:js":         "node scripts/esbuild.config.js --production",
+    "build:js:dev":     "node scripts/esbuild.config.js --dev",
+    "build:css":        "cleancss -o dist/css/styles.min.css frontend/css/styles.css",
+    "build:html":       "node scripts/build-html.js",
+    "build":            "npm-run-all --parallel build:js build:css build:html",
+    "build:dev":        "npm-run-all --parallel build:js:dev build:css build:html",
+    "test:e2e":         "playwright test",
+    "test:e2e:install": "playwright install chromium"
   },
   "devDependencies": {
+    "@playwright/test": "^1.44.0",
     "clean-css-cli": "^5.6.3",
     "esbuild": "^0.25.0",
     "npm-run-all": "^4.1.5"

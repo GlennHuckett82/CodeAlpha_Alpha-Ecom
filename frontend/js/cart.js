@@ -116,27 +116,37 @@ function buildRow(item) {
 
   const uid = `cart-qty-${++rowCounter}`;
 
+  // GET /api/cart/:sessionId returns populated productId objects;
+  // POST /api/cart returns unpopulated (string) productId.
+  // Normalise both shapes so the row always has name, price, and an ID string.
+  const populated   = item.productId && typeof item.productId === 'object' ? item.productId : null;
+  const name        = item.name  ?? populated?.name  ?? '';
+  const price       = item.price ?? populated?.price ?? 0;
+  const productIdStr = populated?._id?.toString()
+    ?? (typeof item.productId === 'string' ? item.productId : '')
+    ?? '';
+
   // Store data on the row for recalcSubtotal
-  li.dataset.productId = item.productId ?? item._id ?? '';
-  li.dataset.unitPrice = String(item.price ?? 0);
+  li.dataset.productId = productIdStr;
+  li.dataset.unitPrice = String(price);
 
   // Text — textContent only
-  nameEl.textContent  = item.name;
-  unitEl.textContent  = currency.format(Number(item.price));
-  subEl.textContent   = currency.format(Number(item.price) * item.quantity);
+  nameEl.textContent  = name;
+  unitEl.textContent  = currency.format(Number(price));
+  subEl.textContent   = currency.format(Number(price) * item.quantity);
 
   // Quantity input
   qtyEl.id    = uid;
   qtyEl.value = String(item.quantity);
   qtyEl.min   = '1';
-  qtyEl.setAttribute('aria-label', `Quantity for ${item.name}`);
+  qtyEl.setAttribute('aria-label', `Quantity for ${name}`);
 
   // Wire the label's `for` to the input id
   label.setAttribute('for', uid);
 
   // Accessible remove button label includes product name
-  removeBtn.setAttribute('aria-label', `Remove ${item.name}`);
-  removeBtn.dataset.productId = li.dataset.productId;
+  removeBtn.setAttribute('aria-label', `Remove ${name}`);
+  removeBtn.dataset.productId = productIdStr;
 
   return li;
 }

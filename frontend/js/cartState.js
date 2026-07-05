@@ -104,11 +104,14 @@ export async function getCart() {
  * @returns {Promise<{ items: Array }>}
  */
 export async function addItem(productId, quantity = 1) {
-  const result = await api.addToCart({
+  await api.addToCart({
     sessionId: getSessionId(),
     productId,
     quantity,
   });
+  // POST /api/cart does not populate product details (name/price).
+  // Re-fetch via GET so the cache always contains display-ready data.
+  const result = await api.getCart(getSessionId());
   const cart = result.data ?? result;
   writeCache(cart);
   dispatch(cart);
@@ -156,7 +159,13 @@ export async function removeItem(productId) {
  * @returns {Promise<{ items: [] }>}
  */
 export async function clearCart() {
-  await api.clearCart(getSessionId());
+  try {
+    await api.clearCart(getSessionId());
+  } catch (err) {
+    // 404 means the cart was already removed server-side (e.g. by order creation).
+    // That is the desired end-state, so treat it as success.
+    if (err.status !== 404) throw err;
+  }
   clearCacheEntry();
   const empty = { items: [] };
   dispatch(empty);
