@@ -2,13 +2,17 @@
 'use strict';
 
 const { test, expect } = require('@playwright/test');
+const { checkA11y }    = require('./a11y-helper');
 
 /**
- * E2E: Error states
+ * E2E: Error states + WCAG 2.1 AA accessibility audit.
  *
  * Covers two failure scenarios:
  *  1. Navigating to a product that does not exist → "not found" UI state
  *  2. Submitting the order form with empty fields → inline validation errors
+ *
+ * checkA11y() is called after each page reaches its stable error/empty state
+ * so axe audits the rendered error UI, not loading skeletons.
  */
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -53,6 +57,9 @@ test.describe('Error state: product not found', () => {
 
     // A link back to the listing should be present
     await expect(errorSection.locator('a[href="index.html"]')).toBeVisible();
+
+    // ── Accessibility audit: product-not-found error state ────────────────────
+    await checkA11y(page);
   });
 });
 
@@ -77,6 +84,9 @@ test.describe('Error state: order form validation', () => {
 
     // Cart item must be visible before we can proceed to checkout
     await expect(page.locator('.cart-item')).toHaveCount(1, { timeout: 10_000 });
+
+    // ── Accessibility audit: cart page with item ──────────────────────────────
+    await checkA11y(page);
 
     // Open the checkout form
     await page.locator('#checkout-btn').click();
@@ -104,6 +114,9 @@ test.describe('Error state: order form validation', () => {
     // Inputs should be marked invalid for screen readers
     await expect(page.locator('#street')).toHaveAttribute('aria-invalid', 'true');
     await expect(page.locator('#card-last-four')).toHaveAttribute('aria-invalid', 'true');
+
+    // ── Accessibility audit: form in error state (all fields invalid) ─────────
+    await checkA11y(page);
 
     // Page should NOT have navigated away
     await expect(page).toHaveURL(/cart\.html/);

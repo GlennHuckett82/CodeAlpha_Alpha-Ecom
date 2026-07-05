@@ -75,13 +75,17 @@ a {
   --color-primary:   #1a73e8;   /* interactive blue */
   --color-primary-dark: #1558b0;
   --color-secondary: #5f6368;   /* muted grey */
-  --color-accent:    #fbbc04;   /* amber highlight */
+  --color-accent:    #fbbc04;   /* amber — decorative use only, do NOT use for text on light backgrounds */
+  /* WCAG 2.1 AA fix: dark amber for price text — 5.02:1 on white, 4.79:1 on --color-surface */
+  --color-price:     #b45309;   /* dark amber price text: 5.02:1 on white, 4.79:1 on surface ✓ */
   --color-bg:        #ffffff;
   --color-surface:   #f8f9fa;   /* card / panel background */
   --color-text:      #202124;
   --color-text-muted: #5f6368;
   --color-border:    #dadce0;
-  --color-error:     #d93025;
+  /* WCAG 2.1 AA fix: #d93025 was 4.04:1 on --color-error-bg (#fce8e6) — FAIL.
+     #c0392b is 4.64:1 on error-bg and 5.48:1 on white — PASS. */
+  --color-error:     #c0392b;
   --color-error-bg:  #fce8e6;
   --color-success:   #188038;
   --color-success-bg:#e6f4ea;
@@ -176,6 +180,29 @@ small {
 }
 
 /* ─── 5. Utility Classes ───────────────────────────────────────────────────── */
+
+/* Skip-navigation link — visually hidden until focused (WCAG 2.4.1, Level A)
+   Keyboard-only users can press Tab on page load to reveal it and jump past
+   the repeated header navigation directly to main content. */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--spacing-sm);
+  z-index: calc(var(--z-header) + 1);
+  padding: 0.5em 1em;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  text-decoration: none;
+  /* Slide into view only when focused */
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus-visible {
+  top: 0;
+  outline-offset: -3px; /* keep ring inside the element */
+}
 
 /* Screen-reader only — visually hidden but accessible */
 .sr-only {
@@ -516,7 +543,9 @@ small {
 .product-card__price {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--color-accent);     /* accent colour as specified */
+  /* WCAG 2.1 AA fix: --color-accent (#fbbc04) only achieves 1.63:1 on --color-surface.
+     --color-price (#b45309) achieves 4.79:1 on surface and 5.02:1 on white. */
+  color: var(--color-price);
   margin-top: auto;               /* push price toward footer */
 }
 
@@ -526,6 +555,10 @@ small {
   flex-wrap: wrap;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  /* WCAG 2.1 AA fix: card background is --color-surface (#f8f9fa);
+     .btn-secondary text (#1a73e8) achieves only 4.31:1 on that surface.
+     White background raises contrast to 4.52:1, meeting the 4.5:1 AA threshold. */
+  background-color: var(--color-bg);
 }
 
 .product-card__footer .btn {
@@ -608,7 +641,11 @@ small {
 
 .cart-item__qty:focus-visible {
   border-color: var(--color-primary);
-  outline: none;                 /* :focus-visible global rule covers outline */
+  /* WCAG 2.4.7 fix: border-color change alone is insufficient as the sole
+     focus indicator — add a box-shadow ring to match the form-input treatment.
+     Suppresses the global outline because box-shadow provides equivalent visibility. */
+  box-shadow: 0 0 0 3px rgb(26 115 232 / 0.4);
+  outline: none;
 }
 
 /* Unit price */
@@ -758,10 +795,12 @@ legend {
   border-color: var(--color-secondary);
 }
 
-/* Focus — primary colour outline */
+/* Focus — primary colour outline.
+   WCAG 2.4.7: box-shadow opacity raised from 0.25 → 0.4 so the focus ring
+   is clearly distinguishable from the surrounding page background. */
 .form-group input:focus-visible {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(26 115 232 / 0.25);
+  box-shadow: 0 0 0 3px rgb(26 115 232 / 0.4);
   outline: none;
 }
 
@@ -772,7 +811,8 @@ legend {
 }
 
 .form-group.has-error input:focus-visible {
-  box-shadow: 0 0 0 3px rgb(217 48 37 / 0.25);
+  /* WCAG 2.4.7: updated to match new --color-error (#c0392b) and 0.4 opacity */
+  box-shadow: 0 0 0 3px rgb(192 57 43 / 0.4);
 }
 
 .field-error {
@@ -948,13 +988,15 @@ legend {
   line-height: var(--leading-body);
 }
 
-/* Warning triangle drawn with CSS (unicode fallback for old browsers) */
+/* Warning triangle drawn with CSS (unicode fallback for old browsers).
+   Note: CSS pseudo-elements are inherently presentational; the ⚠ glyph
+   is supplementary — the sibling error text already conveys the message.
+   aria-hidden is an HTML attribute and has no effect in CSS; removed. */
 .error-message::before {
   content: "⚠";
   font-size: 1.1em;
   line-height: 1;
   flex-shrink: 0;
-  aria-hidden: true;   /* decorative — real text carries the message */
 }
 
 /* ── 3. Empty state ───────────────────────────────────────────────────────── */

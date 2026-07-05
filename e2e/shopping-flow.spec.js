@@ -2,15 +2,15 @@
 'use strict';
 
 const { test, expect } = require('@playwright/test');
+const { checkA11y }    = require('./a11y-helper');
 
 /**
- * E2E: Full shopping journey (happy path)
+ * E2E: Full shopping journey (happy path) + WCAG 2.1 AA accessibility audit.
  *
  * Covers the complete user flow from product listing → detail page →
  * add to cart → cart review → checkout → order confirmation.
- *
- * Requires backend/server.e2e.js to be running (managed by playwright.config.js
- * webServer). The server seeds 5 products on startup.
+ * checkA11y() is called after each page reaches its stable, fully-rendered
+ * state so axe audits real content, not loading skeletons.
  *
  * Auth: POST /api/orders requires a JWT.  server.e2e.js pins JWT_SECRET to
  * 'e2e-test-jwt-secret'.  The token below was signed with that secret and
@@ -39,6 +39,9 @@ test.describe('Shopping flow — happy path', () => {
     // Wait for skeleton placeholders to be replaced by real cards
     const card = page.locator('.product-card:not(.skeleton-card)').first();
     await expect(card).toBeVisible({ timeout: 10_000 });
+
+    // ── Accessibility audit: product listing (stable, products loaded) ────────
+    await checkA11y(page);
   });
 
   test('full journey: browse → detail → add to cart → checkout → confirmation', async ({ page }) => {
@@ -65,6 +68,9 @@ test.describe('Shopping flow — happy path', () => {
     await expect(page.locator('#product-price')).not.toBeEmpty();
     await expect(page.locator('#stock-status')).toContainText(/in stock/i, { timeout: 10_000 });
 
+    // ── Accessibility audit: product detail (product fully loaded) ────────────
+    await checkA11y(page);
+
     // ── Step 3: Add to cart ───────────────────────────────────────────────────
     // quantity-input already has value="1" in the HTML
     await page.locator('#add-to-cart').click();
@@ -89,9 +95,15 @@ test.describe('Shopping flow — happy path', () => {
     const subtotalText = await page.locator('#cart-subtotal').textContent();
     expect(subtotalText).toMatch(/£\d/);
 
+    // ── Accessibility audit: cart page with item (before checkout form) ───────
+    await checkA11y(page);
+
     // ── Step 5: Proceed to checkout ───────────────────────────────────────────
     await page.locator('#checkout-btn').click();
     await expect(page.locator('#order-form-container')).toBeVisible({ timeout: 5_000 });
+
+    // ── Accessibility audit: cart page with order form visible ────────────────
+    await checkA11y(page);
 
     // ── Step 6: Fill in shipping & payment form ───────────────────────────────
     await page.fill('#street',        '42 Playwright Avenue');
@@ -119,5 +131,8 @@ test.describe('Shopping flow — happy path', () => {
 
     // Confirmation heading should be visible
     await expect(page.locator('#confirmation-heading')).toHaveText('Order Confirmed!');
+
+    // ── Accessibility audit: order confirmation page ──────────────────────────
+    await checkA11y(page);
   });
 });
