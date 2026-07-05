@@ -30,8 +30,32 @@ export function generateUUID() {
 }
 
 /**
- * Lazily loads images that carry a `data-src` attribute.
- * Uses IntersectionObserver when available; falls back to eager loading.
+ * Lazily loads images that carry a `data-src` (and optionally `data-srcset`)
+ * attribute, using a three-tier strategy:
+ *
+ * **Tier 1 — Native lazy loading** (`loading="lazy"`)
+ *   Supported in: Chrome 77+, Edge 79+, Firefox 75+, Safari 15.4+, Opera 64+.
+ *   The browser already defers the fetch when `loading="lazy"` is present.
+ *   We simply copy `data-src` → `src` immediately and hand control to the
+ *   browser's built-in scheduler.
+ *
+ * **Tier 2 — IntersectionObserver**
+ *   Supported in: Chrome 51+, Edge 15+, Firefox 55+, Safari 12.1+.
+ *   Needed for: Safari 12.1–15.3 (supports IO but not native lazy loading),
+ *   and any future browser where `loading` is absent. We hold back `src`
+ *   and set it only when the image is ~200 px from entering the viewport,
+ *   giving the browser enough time to fetch and decode before painting.
+ *
+ * **Tier 3 — Eager fallback**
+ *   Needed for: IE 11, very old Android WebView, KaiOS 2.x, and any other
+ *   environment where neither API is available. Images are loaded
+ *   immediately — functionally equivalent to no lazy-loading, but the page
+ *   still works correctly.
+ *
+ * **Why `data-src` instead of `src`?**
+ *   Setting `src` on an `<img>` immediately enqueues a network request.
+ *   Storing the real URL in `data-src` while leaving `src` empty prevents
+ *   any below-the-fold requests until one of the strategies above fires.
  *
  * @param {Document|Element} [container=document]
  */
@@ -39,27 +63,38 @@ export function lazyLoadImages(container = document) {
   const images = container.querySelectorAll('img[data-src]');
   if (!images.length) return;
 
-  if (!('IntersectionObserver' in window)) {
-    // Fallback: load all immediately
-    images.forEach((img) => {
-      img.src = img.dataset.src;
-      img.removeAttribute('data-src');
-    });
+  /** Promote data-src / data-srcset to their live counterparts then clean up. */
+  function revealImage(img) {
+    if (img.dataset.srcset) {
+      img.srcset = img.dataset.srcset;
+      img.removeAttribute('data-srcset');
+    }
+    img.src = img.dataset.src;
+    img.removeAttribute('data-src');
+  }
+
+  // Tier 1 — native lazy loading (browser handles the deferral)
+  if ('loading' in HTMLImageElement.prototype) {
+    images.forEach(revealImage);
     return;
   }
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const img = entry.target;
-        img.src = img.dataset.src;
-        img.removeAttribute('data-src');
-        observer.unobserve(img);
-      });
-    },
-    { rootMargin: '200px' }, // start loading 200 px before entering viewport
-  );
+  // Tier 2 — IntersectionObserver
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          revealImage(entry.target);
+          observer.unobserve(entry.target);
+        });
+      },
+      { rootMargin: '200px 0px' }, // pre-load 200 px before entering viewport
+    );
+    images.forEach((img) => observer.observe(img));
+    return;
+  }
 
-  images.forEach((img) => observer.observe(img));
+  // Tier 3 — eager fallback
+  images.forEach(revealImage);
 }

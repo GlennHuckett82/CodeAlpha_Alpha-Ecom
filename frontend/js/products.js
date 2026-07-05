@@ -11,7 +11,7 @@
  */
 
 import api from './api.js';
-import { debounce } from './utils.js';
+import { debounce, lazyLoadImages } from './utils.js';
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 
@@ -156,9 +156,20 @@ function renderCard(product) {
   article.dataset.productId = product._id;
   addBtn.dataset.productId  = product._id;
 
-  // Image — safe attribute assignment
-  img.alt = product.name; // always set alt before src to avoid flash
-  img.src = product.imageUrl || '';
+  // Image — safe attribute assignment.
+  // data-src withholds the real URL from the browser until lazyLoadImages()
+  // promotes it (either immediately for native-lazy browsers, or via
+  // IntersectionObserver for older Safari / non-supporting environments).
+  img.alt      = product.name;   // set alt before src to avoid screen-reader flash
+  img.loading  = 'lazy';         // native hint; also signals Tier 1 in lazyLoadImages
+  img.decoding = 'async';        // decode off the main thread
+  const imgUrl = product.imageUrl || '';
+  img.setAttribute('data-src',    imgUrl);
+  img.setAttribute('data-srcset', `${imgUrl} 400w, ${imgUrl} 800w`);
+  img.setAttribute('sizes',       '(max-width: 600px) 100vw, 300px');
+  // Add .loaded once the image has painted so CSS can transition the blur out
+  img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+  if (img.complete && img.naturalWidth) img.classList.add('loaded'); // already cached
 
   // Text content — textContent prevents any HTML injection
   nameEl.textContent  = product.name;
@@ -241,6 +252,7 @@ async function fetchAndRender() {
       const frag = document.createDocumentFragment();
       products.forEach((p) => frag.appendChild(renderCard(p)));
       grid.appendChild(frag);
+      lazyLoadImages(grid); // promote data-src → src (deferred via IO for older Safari)
       updatePagination(result.pagination);
       announce(''); // clear status — content is now visible
     }

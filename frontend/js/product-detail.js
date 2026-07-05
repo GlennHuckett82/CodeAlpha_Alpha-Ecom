@@ -116,9 +116,13 @@ function populatePage(product) {
   // Breadcrumb — safe textContent
   breadcrumbName.textContent = product.name;
 
-  // Image
+  // Image — lazy load + async decode; .loaded drives the CSS reveal transition
+  imgEl.alt      = product.name;         // alt before src
+  imgEl.loading  = 'lazy';
+  imgEl.decoding = 'async';
+  imgEl.addEventListener('load', () => imgEl.classList.add('loaded'), { once: true });
   imgEl.src = product.imageUrl || '';
-  imgEl.alt = product.name;
+  if (imgEl.complete && imgEl.naturalWidth) imgEl.classList.add('loaded'); // cached
   captionEl.textContent = product.name;
 
   // Info fields — textContent only
