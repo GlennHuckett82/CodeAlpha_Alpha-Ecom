@@ -10,6 +10,7 @@
  */
 
 import { initProductListing } from './products.js';
+import './header.js'; // side-effect: initialises badge and listens for cart:updated
 
 // TODO (P36): import and initialise cart page
 

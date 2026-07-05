@@ -13,6 +13,8 @@
  */
 
 import api from './api.js';
+import { addItem } from './cartState.js';
+import './header.js'; // side-effect: initialises badge and listens for cart:updated
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 
@@ -29,7 +31,6 @@ const stockEl         = document.getElementById('stock-status');
 const qtyInput        = document.getElementById('quantity-input');
 const addToCartBtn    = document.getElementById('add-to-cart');
 const feedbackEl      = document.getElementById('cart-feedback');
-const cartBadge       = document.getElementById('cart-badge');
 
 // ── Guard ──────────────────────────────────────────────────────────────────
 // Only run on pages that have the product detail markup
@@ -156,21 +157,6 @@ function showFeedback(message, isError = false) {
   }, 5000);
 }
 
-// ── Cart badge ─────────────────────────────────────────────────────────────
-
-function updateCartBadge(count) {
-  if (!cartBadge) return;
-  const n = Math.max(0, count);
-  cartBadge.textContent       = n > 0 ? String(n) : '';
-  cartBadge.dataset.count     = String(n);
-  cartBadge.setAttribute('aria-label', `Shopping cart, ${n} item${n !== 1 ? 's' : ''}`);
-}
-
-function incrementBadge() {
-  const current = parseInt(cartBadge?.textContent, 10) || 0;
-  updateCartBadge(current + parseInt(qtyInput.value, 10) || 1);
-}
-
 // ── Add to cart handler ────────────────────────────────────────────────────
 
 function wireAddToCart(product) {
@@ -192,12 +178,8 @@ function wireAddToCart(product) {
     addToCartBtn.textContent = 'Adding…';
 
     try {
-      // sessionId sourced from localStorage; cartState (P35) manages this —
-      // fall back to a simple UUID until cartState is in place.
-      const sessionId = getSessionId();
-      await api.addToCart({ sessionId, productId: product._id, quantity: qty });
+      await addItem(product._id, qty); // cartState handles sessionId, cache, badge event
       showFeedback(`${product.name} added to cart!`);
-      incrementBadge();
     } catch (err) {
       showFeedback(err.message || 'Failed to add to cart.', true);
     } finally {
@@ -205,19 +187,6 @@ function wireAddToCart(product) {
       addToCartBtn.textContent = 'Add to Cart';
     }
   });
-}
-
-// ── Session ID (temporary until cartState P35 lands) ──────────────────────
-
-function getSessionId() {
-  const KEY = 'alpha_session_id';
-  let id = localStorage.getItem(KEY);
-  if (!id) {
-    // Crypto-safe UUID v4
-    id = crypto.randomUUID();
-    localStorage.setItem(KEY, id);
-  }
-  return id;
 }
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────
