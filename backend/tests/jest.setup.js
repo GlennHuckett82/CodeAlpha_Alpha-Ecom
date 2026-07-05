@@ -12,13 +12,20 @@ beforeAll(async () => {
   await mongoose.connect(uri);
 });
 
-// Wipe every collection between tests so state never bleeds across test cases
+// Flush the cache BEFORE each test so a test can never start with state left
+// by a previous suite running in the same Jest worker process.
+// (afterEach alone has a race window: Suite B's first test can run before
+// Suite A's afterEach fires, causing spurious X-Cache: HIT on expected MISSes.)
+beforeEach(() => {
+  require('../middleware/cache').flushCache();
+});
+
+// Wipe every collection and flush cache AFTER each test for clean teardown
 afterEach(async () => {
   const { collections } = mongoose.connection;
   await Promise.all(
     Object.values(collections).map((collection) => collection.deleteMany({})),
   );
-  // Flush the in-memory response cache so cached responses never bleed between tests
   require('../middleware/cache').flushCache();
 });
 
