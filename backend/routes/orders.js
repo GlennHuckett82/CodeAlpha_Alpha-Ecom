@@ -23,6 +23,57 @@ const sendValidationErrors = (req, res) => {
   return false;
 };
 
+/**
+ * @openapi
+ * /api/orders:
+ *   post:
+ *     tags: [Orders]
+ *     summary: Place an order
+ *     description: >
+ *       Validates cart, checks stock, simulates payment, decrements stock,
+ *       persists the order, and deletes the cart in one atomic-ish operation.
+ *       Stock is rolled back automatically if the Order write fails.
+ *       Requires a valid JWT Bearer token.
+ *     operationId: createOrder
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sessionId, shippingAddress, cardLastFour]
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78
+ *               shippingAddress:
+ *                 $ref: '#/components/schemas/Address'
+ *               cardLastFour:
+ *                 type: string
+ *                 pattern: '^\d{4}$'
+ *                 description: Last 4 digits of the payment card.
+ *                 example: '4242'
+ *     responses:
+ *       '201':
+ *         description: Created — order placed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Order' }
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── POST /api/orders ─────────────────────────────────────────────────────────
 //
 // Orchestration flow:
@@ -149,6 +200,42 @@ router.post('/', protect, [
   }
 });
 
+/**
+ * @openapi
+ * /api/orders/{id}:
+ *   get:
+ *     tags: [Orders]
+ *     summary: Get order by ID
+ *     description: Returns the full order document. Requires a valid JWT Bearer token.
+ *     operationId: getOrderById
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: MongoDB ObjectId of the order.
+ *         example: 64a1f2c3e4b05d8f9a0b1c30
+ *     responses:
+ *       '200':
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Order' }
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── GET /api/orders/:id ──────────────────────────────────────────────────────
 
 router.get('/:id', protect, [

@@ -6,6 +6,35 @@ const { flushCache } = require('../middleware/cache');
 const router = Router();
 
 /**
+ * @openapi
+ * /api/admin/cache:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Flush the in-memory response cache
+ *     description: >
+ *       Immediately invalidates all cached product responses.
+ *       Useful after a bulk product update so the next GET /api/products
+ *       returns fresh data without waiting for the 60-second TTL to expire.
+ *       Requires the `x-admin-key` header to match the `ADMIN_KEY` environment variable.
+ *     operationId: flushCache
+ *     security:
+ *       - AdminKey: []
+ *     responses:
+ *       '200':
+ *         description: OK — cache flushed.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: Cache flushed }
+ *       '401':
+ *         $ref: '#/components/responses/Forbidden'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
+/**
  * DELETE /api/admin/cache
  *
  * Flushes the entire in-memory response cache.

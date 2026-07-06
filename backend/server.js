@@ -44,6 +44,59 @@ function healthHandler(req, res) {
 app.get('/health',     healthHandler);
 app.get('/api/health', healthHandler);
 
+// ─── API Documentation ────────────────────────────────────────────────────────
+// Swagger UI at GET /api/docs   — interactive browser (NODE_ENV !== 'production'
+//                                 OR x-admin-key matches ADMIN_KEY env var)
+// Raw JSON spec at GET /api/docs.json — for Postman / Insomnia import
+//
+// swagger-jsdoc parses ~5 route files on first load (~600 ms).
+// We lazy-load it so tests that never hit /api/docs don't pay the cost.
+//
+// Registered BEFORE the rate-limiter so browsing the docs never consumes quota.
+const swaggerUi = require('swagger-ui-express');
+
+function docsGuard(req, res, next) {
+  // Always accessible in non-production environments (dev, test, staging)
+  if (process.env.NODE_ENV !== 'production') return next();
+  // In production: require x-admin-key to match ADMIN_KEY
+  const adminKey = process.env.ADMIN_KEY;
+  if (adminKey && req.headers['x-admin-key'] === adminKey) return next();
+  return res.status(403).json({
+    success: false,
+    error: 'API docs are restricted in production — provide a valid x-admin-key header.',
+  });
+}
+
+// Lazy-loaded: spec only parsed on first request to /api/docs or /api/docs.json
+let _spec = null;
+let _swaggerSetup = null;
+function getSpec() {
+  if (!_spec) _spec = require('./swagger');
+  return _spec;
+}
+
+app.get('/api/docs.json', docsGuard, (req, res) => res.json(getSpec()));
+app.use(
+  '/api/docs',
+  docsGuard,
+  swaggerUi.serve,
+  (req, res, next) => {
+    if (!_swaggerSetup) {
+      _swaggerSetup = swaggerUi.setup(getSpec(), {
+        customSiteTitle: 'Alpha E-com API Docs',
+        // Hide the default Swagger UI topbar (redundant when embedded)
+        customCss: '.swagger-ui .topbar { display: none }',
+        swaggerOptions: {
+          // Collapse all operations by default for cleaner first impression
+          docExpansion: 'none',
+          persistAuthorization: true,
+        },
+      });
+    }
+    return _swaggerSetup(req, res, next);
+  },
+);
+
 // ─── Rate Limiting ─────────────────────────────────────────────────────────
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

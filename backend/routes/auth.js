@@ -17,6 +17,52 @@ const sendValidationErrors = (req, res) => {
   return false;
 };
 
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new user
+ *     description: Creates a new user account. Passwords are stored as bcrypt hashes (10 rounds).
+ *     operationId: registerUser
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: shopper@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 6
+ *                 example: s3cr3tP@ss
+ *     responses:
+ *       '201':
+ *         description: Created — user registered successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/UserPublic' }
+ *       '409':
+ *         description: Conflict — email already registered.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *             example: { success: false, error: Email already registered }
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── POST /api/auth/register ──────────────────────────────────────────────────
 
 router.post('/register', [
@@ -50,6 +96,57 @@ router.post('/register', [
   }
 });
 
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Log in and obtain a JWT
+ *     description: >
+ *       Returns a signed JWT (24 h expiry) on success.
+ *       The same 401 message is returned for both wrong email and wrong password
+ *       to prevent credential enumeration.
+ *     operationId: loginUser
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: shopper@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: s3cr3tP@ss
+ *     responses:
+ *       '200':
+ *         description: OK — JWT issued.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 token:
+ *                   type: string
+ *                   description: 'JWT Bearer token — send as: Authorization: Bearer <token>'
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc123
+ *       '401':
+ *         description: Unauthorized — invalid credentials.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Error' }
+ *             example: { success: false, error: Invalid credentials }
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
 
 router.post('/login', [

@@ -43,6 +43,36 @@ const quantityBody = body('quantity')
   .withMessage('quantity must be a positive integer')
   .toInt();
 
+/**
+ * @openapi
+ * /api/cart/{sessionId}:
+ *   get:
+ *     tags: [Cart]
+ *     summary: Get cart by session ID
+ *     operationId: getCart
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *         description: Browser-generated UUID stored in localStorage.
+ *         example: a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78
+ *     responses:
+ *       '200':
+ *         description: OK — cart with populated product details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   $ref: '#/components/schemas/Cart'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── GET /api/cart/:sessionId ─────────────────────────────────────────────────
 
 router.get('/:sessionId', async (req, res, next) => {
@@ -61,6 +91,59 @@ router.get('/:sessionId', async (req, res, next) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/cart:
+ *   post:
+ *     tags: [Cart]
+ *     summary: Add item to cart
+ *     description: Creates the cart document if it does not exist. Increments quantity if the item is already present.
+ *     operationId: addToCart
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sessionId, productId, quantity]
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 example: a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78
+ *               productId:
+ *                 type: string
+ *                 description: MongoDB ObjectId of the product.
+ *                 example: 64a1f2c3e4b05d8f9a0b1c2d
+ *               quantity:
+ *                 type: integer
+ *                 minimum: 1
+ *                 example: 2
+ *     responses:
+ *       '200':
+ *         description: OK — item quantity incremented in existing cart.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Cart' }
+ *       '201':
+ *         description: Created — new cart document created.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Cart' }
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── POST /api/cart ───────────────────────────────────────────────────────────
 // Creates cart if needed; increments quantity if item already present.
 
@@ -108,6 +191,83 @@ router.post('/', [
   }
 });
 
+/**
+ * @openapi
+ * /api/cart/{sessionId}/items/{productId}:
+ *   put:
+ *     tags: [Cart]
+ *     summary: Update item quantity
+ *     description: Sets the item quantity to the supplied value (replaces; does not add).
+ *     operationId: updateCartItem
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *         example: a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *         example: 64a1f2c3e4b05d8f9a0b1c2d
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [quantity]
+ *             properties:
+ *               quantity: { type: integer, minimum: 1, example: 3 }
+ *     responses:
+ *       '200':
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Cart' }
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ *   delete:
+ *     tags: [Cart]
+ *     summary: Remove item from cart
+ *     description: Removes a single item line from the cart. The cart document is kept.
+ *     operationId: removeCartItem
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *         example: a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema: { type: string }
+ *         example: 64a1f2c3e4b05d8f9a0b1c2d
+ *     responses:
+ *       '200':
+ *         description: OK — item removed.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Cart' }
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── PUT /api/cart/:sessionId/items/:productId ────────────────────────────────
 // Sets the item quantity to an exact value (replaces, does not add).
 
@@ -179,6 +339,35 @@ router.delete('/:sessionId/items/:productId', [
   }
 });
 
+/**
+ * @openapi
+ * /api/cart/{sessionId}:
+ *   delete:
+ *     tags: [Cart]
+ *     summary: Clear cart
+ *     description: Empties the items array. The cart document is retained.
+ *     operationId: clearCart
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *         example: a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78
+ *     responses:
+ *       '200':
+ *         description: OK — cart cleared.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/Cart' }
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── DELETE /api/cart/:sessionId ──────────────────────────────────────────────
 // Clears all items from the cart (document is kept, items array emptied).
 

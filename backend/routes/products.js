@@ -48,6 +48,64 @@ const idValidation = [
     .withMessage('id must be a valid MongoDB ObjectId'),
 ];
 
+/**
+ * @openapi
+ * /api/products:
+ *   get:
+ *     tags: [Products]
+ *     summary: List products
+ *     description: >
+ *       Returns a paginated product list. Supports two modes:
+ *       **Cursor mode** (default) — efficient, index-only traversal; pass the
+ *       `nextCursor` value from the previous response as `?cursor=`.
+ *       **Offset mode** — classic page/limit; activated by supplying `?page=`.
+ *     operationId: listProducts
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1 }
+ *         description: Activates offset mode. Page number (1-based).
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 50, default: 12 }
+ *         description: Results per page (capped at 50).
+ *       - in: query
+ *         name: cursor
+ *         schema: { type: string }
+ *         description: Last `_id` from the previous cursor-mode response.
+ *         example: 64a1f2c3e4b05d8f9a0b1c2d
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [electronics, clothing, sports, books]
+ *         description: Filter by product category (case-insensitive).
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Full-text search term (requires the text index on `name` + `description`).
+ *         example: wireless headphones
+ *     responses:
+ *       '200':
+ *         description: OK — cursor mode response.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 nextCursor: { type: string, nullable: true, example: 64a1f2c3e4b05d8f9a0b1c2d }
+ *                 hasNextPage: { type: boolean, example: true }
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── GET /api/products ────────────────────────────────────────────────────────
 //
 // Two modes, selected by the presence of ?page=:
@@ -131,6 +189,38 @@ router.get('/', listValidation, async (req, res, next) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/products/{id}:
+ *   get:
+ *     tags: [Products]
+ *     summary: Get product by ID
+ *     operationId: getProductById
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: MongoDB ObjectId of the product.
+ *         example: 64a1f2c3e4b05d8f9a0b1c2d
+ *     responses:
+ *       '200':
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       '404':
+ *         $ref: '#/components/responses/NotFound'
+ *       '422':
+ *         $ref: '#/components/responses/ValidationError'
+ *       '500':
+ *         $ref: '#/components/responses/InternalError'
+ */
 // ─── GET /api/products/:id ────────────────────────────────────────────────────
 
 router.get('/:id', idValidation, async (req, res, next) => {
