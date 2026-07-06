@@ -12,7 +12,6 @@
  *   GET /api/docs.json — raw JSON spec for tooling (Postman, Insomnia, etc.)
  */
 
-const path        = require('path');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 // ─── Reusable schema definitions ─────────────────────────────────────────────
@@ -22,16 +21,16 @@ const schemas = {
   Product: {
     type: 'object',
     properties: {
-      _id:         { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2d' },
-      name:        { type: 'string', example: 'Wireless Noise-Cancelling Headphones' },
+      _id: { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2d' },
+      name: { type: 'string', example: 'Wireless Noise-Cancelling Headphones' },
       description: { type: 'string', example: 'Premium audio with active noise cancellation.' },
-      price:       { type: 'number', format: 'float', example: 79.99 },
+      price: { type: 'number', format: 'float', example: 79.99 },
       category: {
         type: 'string',
         enum: ['electronics', 'clothing', 'sports', 'books'],
         example: 'electronics',
       },
-      stock:    { type: 'integer', minimum: 0, example: 50 },
+      stock: { type: 'integer', minimum: 0, example: 50 },
       imageUrl: { type: 'string', example: 'https://example.com/headphones.jpg' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
@@ -42,26 +41,26 @@ const schemas = {
     type: 'object',
     required: ['street', 'city', 'postcode', 'country'],
     properties: {
-      street:   { type: 'string', example: '42 Playwright Avenue' },
-      city:     { type: 'string', example: 'London' },
+      street: { type: 'string', example: '42 Playwright Avenue' },
+      city: { type: 'string', example: 'London' },
       postcode: { type: 'string', example: 'SW1A 1AA' },
-      country:  { type: 'string', example: 'United Kingdom' },
+      country: { type: 'string', example: 'United Kingdom' },
     },
   },
 
   CartItem: {
     type: 'object',
     properties: {
-      _id:       { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2e' },
+      _id: { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2e' },
       productId: { $ref: '#/components/schemas/Product' },
-      quantity:  { type: 'integer', minimum: 1, example: 2 },
+      quantity: { type: 'integer', minimum: 1, example: 2 },
     },
   },
 
   Cart: {
     type: 'object',
     properties: {
-      _id:       { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2f' },
+      _id: { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2f' },
       sessionId: { type: 'string', example: 'a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78' },
       items: {
         type: 'array',
@@ -75,8 +74,8 @@ const schemas = {
   OrderItem: {
     type: 'object',
     properties: {
-      productId:       { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2d' },
-      quantity:        { type: 'integer', minimum: 1, example: 2 },
+      productId: { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c2d' },
+      quantity: { type: 'integer', minimum: 1, example: 2 },
       priceAtPurchase: { type: 'number', format: 'float', example: 79.99 },
     },
   },
@@ -84,13 +83,13 @@ const schemas = {
   Order: {
     type: 'object',
     properties: {
-      _id:       { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c30' },
+      _id: { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c30' },
       sessionId: { type: 'string', example: 'a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78' },
       items: {
         type: 'array',
         items: { $ref: '#/components/schemas/OrderItem' },
       },
-      totalAmount:     { type: 'number', format: 'float', example: 159.98 },
+      totalAmount: { type: 'number', format: 'float', example: 159.98 },
       shippingAddress: { $ref: '#/components/schemas/Address' },
       status: {
         type: 'string',
@@ -105,7 +104,7 @@ const schemas = {
   UserPublic: {
     type: 'object',
     properties: {
-      id:    { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c31' },
+      id: { type: 'string', example: '64a1f2c3e4b05d8f9a0b1c31' },
       email: { type: 'string', format: 'email', example: 'shopper@example.com' },
     },
   },
@@ -115,7 +114,7 @@ const schemas = {
     type: 'object',
     properties: {
       success: { type: 'boolean', example: false },
-      error:   { type: 'string', example: 'Resource not found' },
+      error: { type: 'string', example: 'Resource not found' },
     },
   },
 
@@ -128,9 +127,9 @@ const schemas = {
         items: {
           type: 'object',
           properties: {
-            type:     { type: 'string', example: 'field' },
-            msg:      { type: 'string', example: 'price must be a positive number' },
-            path:     { type: 'string', example: 'price' },
+            type: { type: 'string', example: 'field' },
+            msg: { type: 'string', example: 'price must be a positive number' },
+            path: { type: 'string', example: 'price' },
             location: { type: 'string', example: 'body' },
           },
         },
@@ -216,12 +215,12 @@ const definition = {
     { url: 'https://alpha-ecom-api.onrender.com', description: 'Production (Render)' },
   ],
   tags: [
-    { name: 'Health',   description: 'Service health and liveness probes' },
+    { name: 'Health', description: 'Service health and liveness probes' },
     { name: 'Products', description: 'Product catalogue (public, cached)' },
-    { name: 'Cart',     description: 'Session-based shopping cart' },
-    { name: 'Orders',   description: 'Order placement and retrieval (JWT required)' },
-    { name: 'Auth',     description: 'User registration and login' },
-    { name: 'Admin',    description: 'Administrative operations (x-admin-key required)' },
+    { name: 'Cart', description: 'Session-based shopping cart' },
+    { name: 'Orders', description: 'Order placement and retrieval (JWT required)' },
+    { name: 'Auth', description: 'User registration and login' },
+    { name: 'Admin', description: 'Administrative operations (x-admin-key required)' },
   ],
   // Health check paths live in server.js, not in a routes/ file, so they are
   // defined directly here rather than via @openapi JSDoc comments.
@@ -244,7 +243,7 @@ const definition = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'ok' },
-                    env:    { type: 'string', example: 'development' },
+                    env: { type: 'string', example: 'development' },
                   },
                 },
               },

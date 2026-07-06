@@ -1,4 +1,5 @@
-﻿'use strict';
+'use strict';
+
 /**
  * Error Handler Middleware — Tests (TDD Red Phase)
  *
@@ -36,8 +37,12 @@ const buildTestApp = () => {
     const err = new Error('Validation failed');
     err.statusCode = 422;
     err.errors = [
-      { type: 'field', msg: 'name is required', path: 'name', location: 'body' },
-      { type: 'field', msg: 'price must be > 0', path: 'price', location: 'body' },
+      {
+ type: 'field', msg: 'name is required', path: 'name', location: 'body',
+},
+      {
+ type: 'field', msg: 'price must be > 0', path: 'price', location: 'body',
+},
     ];
     next(err);
   });

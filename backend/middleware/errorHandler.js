@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /**
  * notFoundHandler - catches any request that reaches this point without

@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * Auth Middleware — Tests (P20)
  *
@@ -40,8 +41,7 @@ describe('protect middleware (unit)', () => {
     });
   });
 
-  const makeToken = (payload = { id: 'abc123', email: 'u@test.com' }, opts = {}) =>
-    jwt.sign(payload, SECRET, { expiresIn: '1h', ...opts });
+  const makeToken = (payload = { id: 'abc123', email: 'u@test.com' }, opts = {}) => jwt.sign(payload, SECRET, { expiresIn: '1h', ...opts });
 
   it('returns 401 when Authorization header is missing entirely', async () => {
     const res = await request(testApp).get('/protected');
@@ -118,7 +118,9 @@ describe('protect middleware (integration — orders routes)', () => {
   it('POST /api/orders returns 401 with no Authorization header', async () => {
     const res = await request(app).post('/api/orders').send({
       sessionId: 'sess-1',
-      shippingAddress: { street: '1 St', city: 'London', postcode: 'SW1', country: 'UK' },
+      shippingAddress: {
+ street: '1 St', city: 'London', postcode: 'SW1', country: 'UK',
+},
       cardLastFour: '1234',
     });
     expect(res.statusCode).toBe(401);
@@ -140,7 +142,9 @@ describe('protect middleware (integration — orders routes)', () => {
       .set('Authorization', `Bearer ${validToken}`)
       .send({
         sessionId: 'no-cart-sess',
-        shippingAddress: { street: '1 St', city: 'London', postcode: 'SW1', country: 'UK' },
+        shippingAddress: {
+ street: '1 St', city: 'London', postcode: 'SW1', country: 'UK',
+},
         cardLastFour: '1234',
       });
     // 401 would mean auth failed; 404 means auth passed but no cart found

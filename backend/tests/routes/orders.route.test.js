@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /**
  * Orders API Routes â€” Supertest Tests (TDD Red Phase)
@@ -270,7 +270,7 @@ describe('POST /api/orders', () => {
     });
 
     it('order totalAmount equals product price Ã— quantity', async () => {
-      const { product } = await seedCartWithProduct({ price: 29.99 }, 3);
+      await seedCartWithProduct({ price: 29.99 }, 3);
 
       const res = await authed(request(app).post('/api/orders')).send({
         sessionId: SESSION_ID,
@@ -283,7 +283,7 @@ describe('POST /api/orders', () => {
     });
 
     it('order item has priceAtPurchase equal to the product price at time of order', async () => {
-      const { product } = await seedCartWithProduct({ price: 49.99 }, 2);
+      await seedCartWithProduct({ price: 49.99 }, 2);
 
       const res = await authed(request(app).post('/api/orders')).send({
         sessionId: SESSION_ID,
@@ -526,10 +526,3 @@ describe('GET /api/orders/:id', () => {
     expect(res.body.success).toBe(false);
   });
 });
-
-
-
-
-
-
-

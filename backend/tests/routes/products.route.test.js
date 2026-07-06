@@ -24,9 +24,7 @@ const makeProduct = (overrides = {}) => ({
 });
 
 const seedProducts = async (count, overrides = {}) => {
-  const docs = Array.from({ length: count }, (_, i) =>
-    makeProduct({ name: `Product ${i + 1}`, ...overrides }),
-  );
+  const docs = Array.from({ length: count }, (_, i) => makeProduct({ name: `Product ${i + 1}`, ...overrides }));
   return Product.insertMany(docs);
 };
 

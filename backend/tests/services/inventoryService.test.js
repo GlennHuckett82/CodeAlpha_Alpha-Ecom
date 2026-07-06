@@ -12,8 +12,7 @@ const { checkStock, decrementStock } = require('../../services/inventoryService'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const createProduct = async (stock = 10, overrides = {}) => {
-  return new Product({
+const createProduct = async (stock = 10, overrides = {}) => new Product({
     name: 'Inventory Test Product',
     description: 'Used as a fixture in inventory service tests.',
     price: 9.99,
@@ -21,7 +20,6 @@ const createProduct = async (stock = 10, overrides = {}) => {
     stock,
     ...overrides,
   }).save();
-};
 
 // ─── checkStock ───────────────────────────────────────────────────────────────
 

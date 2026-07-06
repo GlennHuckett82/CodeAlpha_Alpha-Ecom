@@ -259,4 +259,3 @@ router.get('/:id', protect, [
 });
 
 module.exports = router;
-

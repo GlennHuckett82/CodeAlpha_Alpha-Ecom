@@ -41,7 +41,7 @@ app.use(express.json({ limit: '10kb' }));
 function healthHandler(req, res) {
   res.status(200).json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
 }
-app.get('/health',     healthHandler);
+app.get('/health', healthHandler);
 app.get('/api/health', healthHandler);
 
 // ─── API Documentation ────────────────────────────────────────────────────────
@@ -68,11 +68,11 @@ function docsGuard(req, res, next) {
 }
 
 // Lazy-loaded: spec only parsed on first request to /api/docs or /api/docs.json
-let _spec = null;
-let _swaggerSetup = null;
+let swaggerSpec = null;
+let swaggerSetupFn = null;
 function getSpec() {
-  if (!_spec) _spec = require('./swagger');
-  return _spec;
+  if (!swaggerSpec) swaggerSpec = require('./swagger');
+  return swaggerSpec;
 }
 
 app.get('/api/docs.json', docsGuard, (req, res) => res.json(getSpec()));
@@ -81,8 +81,8 @@ app.use(
   docsGuard,
   swaggerUi.serve,
   (req, res, next) => {
-    if (!_swaggerSetup) {
-      _swaggerSetup = swaggerUi.setup(getSpec(), {
+    if (!swaggerSetupFn) {
+      swaggerSetupFn = swaggerUi.setup(getSpec(), {
         customSiteTitle: 'Alpha E-com API Docs',
         // Hide the default Swagger UI topbar (redundant when embedded)
         customCss: '.swagger-ui .topbar { display: none }',
@@ -93,7 +93,7 @@ app.use(
         },
       });
     }
-    return _swaggerSetup(req, res, next);
+    return swaggerSetupFn(req, res, next);
   },
 );
 
@@ -101,8 +101,8 @@ app.use(
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
-  standardHeaders: true,   // Return rate-limit info in RateLimit-* headers
-  legacyHeaders: false,    // Disable X-RateLimit-* headers
+  standardHeaders: true, // Return rate-limit info in RateLimit-* headers
+  legacyHeaders: false, // Disable X-RateLimit-* headers
   message: { success: false, error: 'Too many requests, please try again later.' },
   // Skip rate limiting during automated tests so the suite never trips the limit
   skip: () => process.env.NODE_ENV === 'test',
@@ -110,6 +110,7 @@ const apiLimiter = rateLimit({
 
 // ─── Response Cache ──────────────────────────────────────────────────────────
 const { createCache } = require('./middleware/cache');
+
 const productCache = createCache(60); // 60-second TTL
 
 // ─── Static Files (frontend) ────────────────────────────────────────
@@ -137,13 +138,14 @@ app.use('/api/products', (req, res, next) => {
   next();
 });
 app.use('/api/products', productCache, require('./routes/products'));
-app.use('/api/cart',     require('./routes/cart'));
-app.use('/api/orders',   require('./routes/orders'));
-app.use('/api/auth',     require('./routes/auth'));
-app.use('/api/admin',    require('./routes/admin'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
 
 // ─── Error Handling ───────────────────────────────────────────────────────────
 const { notFoundHandler, validationErrorHandler, generalErrorHandler } = require('./middleware/errorHandler');
+
 app.use(notFoundHandler);
 app.use(validationErrorHandler);
 app.use(generalErrorHandler);

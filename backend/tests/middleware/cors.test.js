@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * CORS Origin Enforcement — Tests (P18)
  *

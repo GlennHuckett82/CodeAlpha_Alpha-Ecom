@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * MongoDB Index Tests (P21)
  *
@@ -13,9 +14,9 @@
  */
 
 const mongoose = require('mongoose');
-const Product  = require('../../models/product.model');
-const Order    = require('../../models/order.model');
-const Cart     = require('../../models/cart.model');
+const Product = require('../../models/product.model');
+const Order = require('../../models/order.model');
+const Cart = require('../../models/cart.model');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -23,11 +24,11 @@ const Cart     = require('../../models/cart.model');
 const hasIndexScan = (plan) => JSON.stringify(plan).includes('IXSCAN');
 
 const makeProduct = (overrides = {}) => ({
-  name:        'Test Product',
+  name: 'Test Product',
   description: 'Used in index tests.',
-  price:       9.99,
-  category:    'test-cat',
-  stock:       10,
+  price: 9.99,
+  category: 'test-cat',
+  stock: 10,
   ...overrides,
 });
 
@@ -35,7 +36,9 @@ const makeOrder = (productId) => ({
   sessionId: 'idx-test-session',
   items: [{ productId, quantity: 1, priceAtPurchase: 9.99 }],
   totalAmount: 9.99,
-  shippingAddress: { street: '1 Index St', city: 'London', postcode: 'SW1A 1AA', country: 'UK' },
+  shippingAddress: {
+ street: '1 Index St', city: 'London', postcode: 'SW1A 1AA', country: 'UK',
+},
 });
 
 // ─── Product indexes ──────────────────────────────────────────────────────────
@@ -48,9 +51,15 @@ describe('Product indexes', () => {
 
   beforeEach(async () => {
     await Product.insertMany([
-      makeProduct({ name: 'Cheap Widget',  price:  4.99, category: 'widgets', stock: 10 }),
-      makeProduct({ name: 'Pricey Widget', price: 49.99, category: 'widgets', stock:  5 }),
-      makeProduct({ name: 'Basic Gadget',  price:  9.99, category: 'gadgets', stock:  8 }),
+      makeProduct({
+ name: 'Cheap Widget', price: 4.99, category: 'widgets', stock: 10,
+}),
+      makeProduct({
+ name: 'Pricey Widget', price: 49.99, category: 'widgets', stock: 5,
+}),
+      makeProduct({
+ name: 'Basic Gadget', price: 9.99, category: 'gadgets', stock: 8,
+}),
     ]);
   });
 
@@ -141,8 +150,8 @@ describe('Order indexes', () => {
 
   beforeEach(async () => {
     await Order.insertMany([
-      { ...makeOrder(sampleProductId), status: 'pending'   },
-      { ...makeOrder(sampleProductId), status: 'pending'   },
+      { ...makeOrder(sampleProductId), status: 'pending' },
+      { ...makeOrder(sampleProductId), status: 'pending' },
       { ...makeOrder(sampleProductId), status: 'completed' },
     ]);
   });

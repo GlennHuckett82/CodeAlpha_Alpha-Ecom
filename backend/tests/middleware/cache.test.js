@@ -42,8 +42,7 @@ afterEach(() => {
 
 // ─── Seed helper ──────────────────────────────────────────────────────────────
 
-const seed = (overrides = {}) =>
-  Product.create({
+const seed = (overrides = {}) => Product.create({
     name: 'Cache Widget',
     description: 'A widget for testing the cache middleware response caching.',
     price: 9.99,
@@ -137,7 +136,7 @@ describe('Cache TTL expiry', () => {
     expect(r2.headers['x-cache']).toBe('HIT');
 
     // Wait 50 ms — well past the 10 ms TTL
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => { setTimeout(resolve, 50); });
 
     const r3 = await request(shortApp).get('/api/products');
     expect(r3.headers['x-cache']).toBe('MISS');

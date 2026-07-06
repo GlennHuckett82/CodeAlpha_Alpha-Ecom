@@ -368,9 +368,7 @@ describe('Order Model', () => {
 
       expect(err).not.toBeNull();
       // At least one shippingAddress sub-field should be flagged
-      const hasAddressError = Object.keys(err.errors).some((key) =>
-        key.startsWith('shippingAddress'),
-      );
+      const hasAddressError = Object.keys(err.errors).some((key) => key.startsWith('shippingAddress'));
       expect(hasAddressError).toBe(true);
     });
   });

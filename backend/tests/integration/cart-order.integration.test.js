@@ -15,14 +15,14 @@
  * even after afterEach wipes the users collection.
  */
 
-const request  = require('supertest');
-const bcrypt   = require('bcryptjs');
-const jwt      = require('jsonwebtoken');
-const app      = require('../../server');
-const Product  = require('../../models/product.model');
-const Cart     = require('../../models/cart.model');
-const Order    = require('../../models/order.model');
-const User     = require('../../models/user.model');
+const request = require('supertest');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const app = require('../../server');
+const Product = require('../../models/product.model');
+const Cart = require('../../models/cart.model');
+const Order = require('../../models/order.model');
+const User = require('../../models/user.model');
 
 // ─── Auth setup ───────────────────────────────────────────────────────────────
 
@@ -30,8 +30,8 @@ let authToken;
 
 beforeAll(async () => {
   const hash = await bcrypt.hash('IntegrationPass99!', 10);
-  const user  = await User.create({
-    email:    'cart-order-integration@example.com',
+  const user = await User.create({
+    email: 'cart-order-integration@example.com',
     password: hash,
   });
   authToken = jwt.sign(
@@ -49,19 +49,19 @@ const authed = (req) => req.set('Authorization', `Bearer ${authToken}`);
 const SESSION = 'integration-cart-order-session-001';
 
 const validShipping = {
-  street:  '10 Integration Lane',
-  city:    'Testville',
-  postcode:'SW1A 1AA',
+  street: '10 Integration Lane',
+  city: 'Testville',
+  postcode: 'SW1A 1AA',
   country: 'United Kingdom',
 };
 
 const makeProduct = (overrides = {}) => ({
-  name:        'Cart-Order Integration Product',
+  name: 'Cart-Order Integration Product',
   description: 'Product used in cart/order integration tests.',
-  price:       25.00,
-  category:    'electronics',
-  stock:       10,
-  imageUrl:    'https://example.com/int.webp',
+  price: 25.00,
+  category: 'electronics',
+  stock: 10,
+  imageUrl: 'https://example.com/int.webp',
   ...overrides,
 });
 
@@ -131,9 +131,9 @@ describe('Integration: Place order — success path', () => {
   it('returns 201 and creates the order document in the DB', async () => {
     const res = await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -150,9 +150,9 @@ describe('Integration: Place order — success path', () => {
   it('decrements product stock by the ordered quantity (5 − 2 = 3)', async () => {
     await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -163,9 +163,9 @@ describe('Integration: Place order — success path', () => {
   it('clears the cart after the order is placed', async () => {
     await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -176,9 +176,9 @@ describe('Integration: Place order — success path', () => {
   it('order document has correct item snapshot and computed total', async () => {
     const res = await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -209,9 +209,9 @@ describe('Integration: Place order — insufficient stock', () => {
   it('returns 422 with a stock-related error message', async () => {
     const res = await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -223,9 +223,9 @@ describe('Integration: Place order — insufficient stock', () => {
   it('does NOT decrement product stock when the order is rejected', async () => {
     await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -236,9 +236,9 @@ describe('Integration: Place order — insufficient stock', () => {
   it('does NOT clear the cart when the order is rejected', async () => {
     await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 
@@ -250,9 +250,9 @@ describe('Integration: Place order — insufficient stock', () => {
   it('does NOT create an Order document when the stock check fails', async () => {
     await authed(
       request(app).post('/api/orders').send({
-        sessionId:       SESSION,
+        sessionId: SESSION,
         shippingAddress: validShipping,
-        cardLastFour:    '4242',
+        cardLastFour: '4242',
       }),
     );
 

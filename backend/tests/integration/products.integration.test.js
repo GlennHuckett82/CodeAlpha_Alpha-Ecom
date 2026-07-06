@@ -11,10 +11,10 @@
  * tests/jest.setup.js — nothing to set up here beyond seeding.
  */
 
-const request  = require('supertest');
+const request = require('supertest');
 const mongoose = require('mongoose');
-const app      = require('../../server');
-const Product  = require('../../models/product.model');
+const app = require('../../server');
+const Product = require('../../models/product.model');
 
 // ─── Seed helpers ─────────────────────────────────────────────────────────────
 
@@ -26,12 +26,12 @@ const SEED_CATEGORIES = [
 ];
 
 const makeProduct = (overrides = {}) => ({
-  name:        'Integration Product',
+  name: 'Integration Product',
   description: 'A product created for integration testing.',
-  price:       14.99,
-  category:    'electronics',
-  stock:       25,
-  imageUrl:    'https://example.com/int-test.webp',
+  price: 14.99,
+  category: 'electronics',
+  stock: 25,
+  imageUrl: 'https://example.com/int-test.webp',
   ...overrides,
 });
 
@@ -40,12 +40,10 @@ const makeProduct = (overrides = {}) => ({
  * Returns the array of inserted Mongoose documents.
  */
 const seedProducts = async (count = 15) => {
-  const docs = Array.from({ length: count }, (_, i) =>
-    makeProduct({
-      name:     `Integration Product ${i + 1}`,
+  const docs = Array.from({ length: count }, (_, i) => makeProduct({
+      name: `Integration Product ${i + 1}`,
       category: SEED_CATEGORIES[i] ?? 'electronics',
-    }),
-  );
+    }));
   return Product.insertMany(docs);
 };
 
@@ -152,7 +150,9 @@ describe('Integration: GET /api/products/:id', () => {
 
   beforeEach(async () => {
     [product] = await Product.insertMany([
-      makeProduct({ name: 'Specific Product', price: 49.99, category: 'books', stock: 7 }),
+      makeProduct({
+ name: 'Specific Product', price: 49.99, category: 'books', stock: 7,
+}),
     ]);
   });
 
@@ -162,7 +162,7 @@ describe('Integration: GET /api/products/:id', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
 
-    const data = res.body.data;
+    const { data } = res.body;
     expect(data._id).toBe(product._id.toString());
     expect(data.name).toBe('Specific Product');
     expect(data.price).toBe(49.99);

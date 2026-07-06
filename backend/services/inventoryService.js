@@ -34,8 +34,8 @@ const checkStock = async (productId, quantity) => {
 
   if (product.stock < quantity) {
     throw new Error(
-      `Insufficient stock for product "${product.name}": ` +
-      `requested ${quantity}, available ${product.stock}.`,
+      `Insufficient stock for product "${product.name}": `
+      + `requested ${quantity}, available ${product.stock}.`,
     );
   }
 
@@ -82,8 +82,8 @@ const decrementStock = async (productId, quantity) => {
   // Product exists but stock was insufficient
   const product = await Product.findById(productId);
   throw new Error(
-    `Insufficient stock for product "${product.name}": ` +
-    `requested ${quantity}, available ${product.stock}.`,
+    `Insufficient stock for product "${product.name}": `
+    + `requested ${quantity}, available ${product.stock}.`,
   );
 };
 

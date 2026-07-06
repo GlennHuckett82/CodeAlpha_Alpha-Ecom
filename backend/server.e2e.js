@@ -30,44 +30,44 @@ const mongoose = require('mongoose');
 
 const SEED_PRODUCTS = [
   {
-    name:        'Wireless Noise-Cancelling Headphones',
+    name: 'Wireless Noise-Cancelling Headphones',
     description: 'Over-ear Bluetooth headphones with 30-hour battery life.',
-    price:       79.99,
-    category:    'electronics',
-    stock:       50,
-    imageUrl:    '',
+    price: 79.99,
+    category: 'electronics',
+    stock: 50,
+    imageUrl: '',
   },
   {
-    name:        'Mechanical Gaming Keyboard',
+    name: 'Mechanical Gaming Keyboard',
     description: 'Tenkeyless mechanical keyboard with RGB backlighting.',
-    price:       129.99,
-    category:    'electronics',
-    stock:       50,
-    imageUrl:    '',
+    price: 129.99,
+    category: 'electronics',
+    stock: 50,
+    imageUrl: '',
   },
   {
-    name:        'Running Shoes — Size 10',
+    name: 'Running Shoes — Size 10',
     description: 'Lightweight trainers with cushioned sole.',
-    price:       89.99,
-    category:    'clothing',
-    stock:       50,
-    imageUrl:    '',
+    price: 89.99,
+    category: 'clothing',
+    stock: 50,
+    imageUrl: '',
   },
   {
-    name:        'Yoga Mat',
+    name: 'Yoga Mat',
     description: 'Non-slip 6mm exercise mat.',
-    price:       34.99,
-    category:    'sports',
-    stock:       50,
-    imageUrl:    '',
+    price: 34.99,
+    category: 'sports',
+    stock: 50,
+    imageUrl: '',
   },
   {
-    name:        'JavaScript: The Good Parts',
+    name: 'JS — The Good Parts',
     description: 'Classic guide to the best features of JavaScript.',
-    price:       24.99,
-    category:    'books',
-    stock:       50,
-    imageUrl:    '',
+    price: 24.99,
+    category: 'books',
+    stock: 50,
+    imageUrl: '',
   },
 ];
 
@@ -76,7 +76,7 @@ const SEED_PRODUCTS = [
 async function main() {
   // 1. Start in-memory MongoDB
   const mongod = await MongoMemoryServer.create();
-  const uri    = mongod.getUri();
+  const uri = mongod.getUri();
 
   // 2. Connect and seed BEFORE the Express app boots
   await mongoose.connect(uri);
@@ -93,7 +93,7 @@ async function main() {
   process.env.MONGO_URI = uri;
 
   // 4. Require the app (require.main !== module, so no listen/connectDB runs)
-  const app  = require('./server');
+  const app = require('./server');
   const PORT = process.env.PORT || 3000;
 
   // 5. Start listening

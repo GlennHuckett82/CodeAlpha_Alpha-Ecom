@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * createIndexes.js — run with: npm run db:indexes
  *
@@ -15,8 +16,8 @@ const mongoose = require('mongoose');
 // Import all models so their schemas (and therefore their index declarations)
 // are registered before we call syncIndexes().
 const Product = require('../models/product.model');
-const Order   = require('../models/order.model');
-const Cart    = require('../models/cart.model');
+const Order = require('../models/order.model');
+const Cart = require('../models/cart.model');
 
 async function run() {
   const uri = process.env.MONGO_URI;

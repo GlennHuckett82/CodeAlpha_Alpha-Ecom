@@ -25,17 +25,17 @@ describe('pricingService.calculateOrderTotal', () => {
 
   it('sums all items correctly for multiple items', () => {
     const items = [
-      { priceAtPurchase: 10.00, quantity: 2 },  // 20.00
-      { priceAtPurchase: 5.00,  quantity: 4 },  // 20.00
-      { priceAtPurchase: 2.50,  quantity: 1 },  // 2.50
+      { priceAtPurchase: 10.00, quantity: 2 }, // 20.00
+      { priceAtPurchase: 5.00, quantity: 4 }, // 20.00
+      { priceAtPurchase: 2.50, quantity: 1 }, // 2.50
     ];
     expect(calculateOrderTotal(items)).toBe(42.50);
   });
 
   it('handles decimal prices accurately (rounds to 2dp)', () => {
     const items = [
-      { priceAtPurchase: 0.10, quantity: 3 },  // 0.30
-      { priceAtPurchase: 0.20, quantity: 3 },  // 0.60
+      { priceAtPurchase: 0.10, quantity: 3 }, // 0.30
+      { priceAtPurchase: 0.20, quantity: 3 }, // 0.60
     ];
     // 0.1 * 3 + 0.2 * 3 = 0.30 + 0.60 = 0.90 — floating point without rounding gives 0.8999...
     expect(calculateOrderTotal(items)).toBe(0.90);
@@ -118,7 +118,7 @@ describe('pricingService.validatePrices', () => {
 
   it('throws identifying the first invalid item — only first error reported', () => {
     const items = [
-      { priceAtPurchase: 5.00,  quantity: 1 }, // valid
+      { priceAtPurchase: 5.00, quantity: 1 }, // valid
       { priceAtPurchase: -1.00, quantity: 1 }, // invalid
       { priceAtPurchase: -2.00, quantity: 1 }, // also invalid but only first matters
     ];

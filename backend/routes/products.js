@@ -138,8 +138,8 @@ router.get('/', listValidation, async (req, res, next) => {
 
     // ── Offset mode (?page= present) ──────────────────────────────────────────
     if (req.query.page !== undefined) {
-      const page  = req.query.page;
-      const skip  = (page - 1) * limit;
+      const { page } = req.query;
+      const skip = (page - 1) * limit;
 
       const [products, total] = await Promise.all([
         Product.find(filter).skip(skip).limit(limit).lean(),
@@ -175,8 +175,8 @@ router.get('/', listValidation, async (req, res, next) => {
       .lean();
 
     const hasNextPage = products.length > limit;
-    const data        = hasNextPage ? products.slice(0, limit) : products;
-    const nextCursor  = hasNextPage ? data[data.length - 1]._id.toString() : null;
+    const data = hasNextPage ? products.slice(0, limit) : products;
+    const nextCursor = hasNextPage ? data[data.length - 1]._id.toString() : null;
 
     return res.status(200).json({
       success: true,
@@ -244,4 +244,3 @@ router.get('/:id', idValidation, async (req, res, next) => {
 });
 
 module.exports = router;
-
