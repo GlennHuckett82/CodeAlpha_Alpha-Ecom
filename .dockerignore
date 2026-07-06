@@ -1,0 +1,49 @@
+# ── .dockerignore ─────────────────────────────────────────────────────────────
+# Excludes files from the Docker build context (project root).
+# Keeps the image small and prevents secrets from leaking into layers.
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+# node_modules are installed fresh inside the container via npm ci
+node_modules
+backend/node_modules
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# Never bake secrets into image layers — pass them at runtime via env_file
+.env
+*.env
+# Allow .env.example to be visible in context (no secrets, just schema docs)
+!**/.env.example
+
+# ── Test infrastructure ───────────────────────────────────────────────────────
+backend/tests/
+backend/coverage/
+backend/jest.config.js
+backend/.eslintrc.js
+backend/.eslintignore
+backend/.prettierrc
+backend/.prettierignore
+e2e/
+test-results/
+playwright.config.js
+
+# ── E2E / Playwright ──────────────────────────────────────────────────────────
+backend/server.e2e.js
+
+# ── Frontend build output ─────────────────────────────────────────────────────
+# The server.js serves from frontend/ (source), not dist/
+dist/
+
+# ── Root-level tooling (not needed inside the image) ─────────────────────────
+# Note: we do NOT exclude root package.json/package-lock.json here because
+# a bare 'package.json' pattern also matches backend/package.json, which IS
+# needed by the COPY instruction for layer caching. Those root files are
+# harmless in the build context — the Dockerfile never COPYs them.
+scripts/
+
+# ── Version control ───────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── Docs / misc ───────────────────────────────────────────────────────────────
+*.md

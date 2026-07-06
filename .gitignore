@@ -40,4 +40,6 @@ Thumbs.db
 .idea/
 
 # Docker
-.dockerignore
+# .dockerignore is intentionally committed — it controls what enters the image
+backend/.env
+backend/*.env
