@@ -1,0 +1,182 @@
+# Alpha E-com — Continuous Integration
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs on every push and pull request targeting the main branch.
+#
+# Jobs (each depends on the previous — fail fast):
+#   lint  → Verify code style with ESLint
+#   test  → Run all Jest unit + integration tests with coverage (≥80% enforced)
+#   build → Minify frontend assets and verify dist/ output
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   JWT_SECRET   — any non-empty string; used by auth tests to sign/verify JWTs
+#                  (no real database is touched; mongodb-memory-server is used)
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  # ── 1. Lint ─────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          # Path is relative to the workspace root, not working-directory
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  # ── 2. Test + Coverage ──────────────────────────────────────────────────────
+  test:
+    name: Test + Coverage
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15   # MongoDB binary download can take a few minutes on cache miss
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      NODE_ENV: test
+      # Auth tests sign and verify JWTs with this secret.
+      # No real database is used — mongodb-memory-server spins up an in-process
+      # MongoDB instance, so MONGO_URI is not required in CI.
+      #
+      # Preferred: set JWT_SECRET in repository secrets
+      # (Settings → Secrets and variables → Actions → New repository secret).
+      # Fallback: a fixed test-only value is used when the secret is absent so
+      # the first CI run succeeds even before the secret is configured.
+      # WARNING: the fallback value must NEVER be used in production.
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-secret-not-for-production' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # Cache the MongoDB binary that mongodb-memory-server downloads on first use.
+      # Without this cache, each run downloads ~100 MB from MongoDB's CDN.
+      # Cache key includes the lockfile hash so a mongodb-memory-server version
+      # bump (which changes package-lock.json) automatically busts the cache.
+      - name: Cache mongodb-memory-server binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            mongodb-binaries-${{ runner.os }}-
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        # jest.config.js enforces coverageThreshold: 80% on all metrics.
+        # Jest exits non-zero if any threshold is missed → this step fails.
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        # Upload even when tests fail so the report is available for debugging
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/coverage/
+          retention-days: 7
+
+  # ── 3. Build ─────────────────────────────────────────────────────────────────
+  build:
+    name: Build (frontend assets)
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # No working-directory override — build scripts run from the project root
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        # Sets BUILD_HASH to the short git SHA so asset URLs are reproducible
+        run: BUILD_HASH=$(git rev-parse --short HEAD) npm run build
+
+      - name: Verify dist/ output
+        run: |
+          echo "Verifying dist/ build artifacts..."
+          ok=true
+          for f in \
+            dist/js/main.min.js \
+            dist/js/product-detail.min.js \
+            dist/js/cart.min.js \
+            dist/js/order-confirmation.min.js \
+            dist/css/styles.min.css \
+            dist/index.html \
+            dist/cart.html \
+            dist/product.html \
+            dist/order-confirmation.html; do
+            if [[ -f "$f" ]]; then
+              printf "  ✓  %-44s (%d bytes)\n" "$f" "$(wc -c < "$f")"
+            else
+              printf "  ✗  MISSING: %s\n" "$f"
+              ok=false
+            fi
+          done
+          if [[ "$ok" != "true" ]]; then
+            echo ""
+            echo "Build verification failed — one or more expected files are missing."
+            exit 1
+          fi
+          echo ""
+          echo "All build artifacts present."
+
+      - name: Upload dist/ as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 3
