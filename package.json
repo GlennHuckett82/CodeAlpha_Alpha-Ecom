@@ -2,16 +2,19 @@
   "name": "alpha-ecom",
   "private": true,
   "scripts": {
-    "build:js":         "node scripts/esbuild.config.js --production",
-    "build:js:dev":     "node scripts/esbuild.config.js --dev",
-    "build:css":        "cleancss -o dist/css/styles.min.css frontend/css/styles.css",
-    "build:html":       "node scripts/build-html.js",
-    "build":            "npm-run-all --parallel build:js build:css build:html",
-    "build:dev":        "npm-run-all --parallel build:js:dev build:css build:html",
-    "test:e2e":         "playwright test",
-    "test:e2e:install": "playwright install chromium"
+    "build:js": "node scripts/esbuild.config.js --production",
+    "build:js:dev": "node scripts/esbuild.config.js --dev",
+    "build:css": "cleancss -o dist/css/styles.min.css frontend/css/styles.css",
+    "build:html": "node scripts/build-html.js",
+    "build": "npm-run-all --parallel build:js build:css build:html",
+    "build:dev": "npm-run-all --parallel build:js:dev build:css build:html",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.44.0",
     "clean-css-cli": "^5.6.3",
     "esbuild": "^0.25.0",

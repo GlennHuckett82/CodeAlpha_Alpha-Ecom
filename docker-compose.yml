@@ -1,0 +1,49 @@
+# Alpha E-com — Docker Compose
+# ──────────────────────────────────────────────────────────────────────────────
+# Prerequisites:
+#   1. Copy backend/.env.example → backend/.env and fill in JWT_SECRET.
+#      MONGO_URI and CORS_ORIGIN are overridden below for Docker networking.
+#   2. docker compose up --build   (or: npm run docker:up from project root)
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Express API + static frontend ──────────────────────────────────────────
+  api:
+    build:
+      context: .                     # project root — Dockerfile needs frontend/
+      dockerfile: backend/Dockerfile
+    env_file:
+      - ./backend/.env               # loads PORT, JWT_SECRET, NODE_ENV, etc.
+    environment:
+      # Override .env values that must differ inside Docker:
+      #   • mongo   = service name resolved by Docker's internal DNS
+      #   • CORS_ORIGIN matches the browser-visible origin (same host, port 3000)
+      MONGO_URI: mongodb://mongo:27017/alpha-ecom
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3000:3000"                  # expose API + frontend to the host
+    depends_on:
+      mongo:
+        condition: service_healthy   # wait for MongoDB to be ready before starting
+    restart: unless-stopped
+
+  # ── MongoDB ─────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    # No 'ports' section: MongoDB is only reachable on the internal Docker
+    # network (via service name 'mongo'). It is NOT exposed to the host.
+    volumes:
+      - alpha_mongo_data:/data/db    # persist database across container restarts
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+# ── Named volumes ───────────────────────────────────────────────────────────
+volumes:
+  alpha_mongo_data:
