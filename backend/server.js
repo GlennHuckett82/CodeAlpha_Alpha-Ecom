@@ -34,6 +34,16 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10kb' }));
 
+// ─── Health checks ────────────────────────────────────────────────────────────
+// Registered BEFORE the rate-limiter so monitoring pings do not consume quota.
+// /health      — Render healthCheckPath (plain path, outside /api prefix)
+// /api/health  — convenience alias for API consumers / uptime monitors
+function healthHandler(req, res) {
+  res.status(200).json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
+}
+app.get('/health',     healthHandler);
+app.get('/api/health', healthHandler);
+
 // ─── Rate Limiting ─────────────────────────────────────────────────────────
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -78,11 +88,6 @@ app.use('/api/cart',     require('./routes/cart'));
 app.use('/api/orders',   require('./routes/orders'));
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/admin',    require('./routes/admin'));
-
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
-});
 
 // ─── Error Handling ───────────────────────────────────────────────────────────
 const { notFoundHandler, validationErrorHandler, generalErrorHandler } = require('./middleware/errorHandler');

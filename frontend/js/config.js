@@ -26,10 +26,20 @@ const _nodeEnv =
 /* eslint-enable no-undef */
 
 const CONFIG = {
-  // Resolved to a string literal at bundle time; falls back to localhost in dev
+  // API_BASE_URL — empty string in production, absolute URL in development.
+  //
+  // Production (esbuild collapses the ternary at bundle time):
+  //   The Express server on Render serves both the API and the frontend from the
+  //   SAME origin (e.g. https://alpha-ecom-api.onrender.com).  All API calls
+  //   are therefore same-origin, so relative paths like /api/products work
+  //   correctly without hardcoding any domain.  Using '' avoids breakage if the
+  //   service is ever moved to a custom domain.
+  //
+  // Development (no build step — Live Server on :5500, API on :3000):
+  //   Absolute URL is required because the two servers are cross-origin.
   API_BASE_URL:
     _nodeEnv === 'production'
-      ? 'https://api.alpha-store.example.com' // TODO: replace with your production URL
+      ? ''                      // same-origin on Render — no domain needed
       : 'http://localhost:3000',
 
   BUILD_HASH: 'dev',
