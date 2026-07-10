@@ -29,7 +29,7 @@ const mongoose = require('mongoose');
 // ─── Seed data ────────────────────────────────────────────────────────────────
 // CDN helpers — IDs verified free (no Unsplash+ / Pexels licence required).
 const unsplash = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=400&h=300&q=80`;
-const pexels   = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop`;
+const pexels = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop`;
 
 const SEED_PRODUCTS = [
   // ── Electronics ──────────────────────────────────────────────────────────

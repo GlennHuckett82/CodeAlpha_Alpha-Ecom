@@ -1,5 +1,6 @@
 'use strict';
 
+/* eslint-disable no-console */
 /**
  * createIndexes.js — run with: npm run db:indexes
  *
