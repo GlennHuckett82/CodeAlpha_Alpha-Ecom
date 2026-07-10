@@ -1,5 +1,10 @@
 'use strict';
 
+// Auth routes — register & login with bcrypt password hashing and JWT signing.
+// The API is fully implemented and covered by the Jest test suite.
+// Frontend account pages (login.html / register.html) are the planned next step;
+// once in place they will exchange credentials for the signed JWT returned here.
+
 const { Router } = require('express');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');

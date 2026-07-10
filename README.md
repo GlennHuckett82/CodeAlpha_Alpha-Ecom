@@ -208,6 +208,13 @@ See [docs/deployment.md](docs/deployment.md) for full step-by-step instructions 
 
 ---
 
+## Planned Extensions
+
+- **Frontend account pages** — the auth API (`POST /api/auth/register`, `POST /api/auth/login`) is fully implemented, tested, and documented. The natural next iteration is a `login.html` / `register.html` UI that exchanges credentials for a JWT and persists it in `localStorage`, enabling a personalised order history view per user.
+- **Persisted cart** — currently the cart is tied to an anonymous `sessionId`; linking it to an authenticated user account is a straightforward extension once the login UI is in place.
+
+---
+
 ## License
 
 MIT © 2024 Alpha E-com Contributors
