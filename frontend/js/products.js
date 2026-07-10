@@ -12,6 +12,7 @@
 
 import api from './api.js';
 import { debounce, lazyLoadImages } from './utils.js';
+import { addItem } from './cartState.js';
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 
@@ -330,6 +331,37 @@ function wireCategory() {
 
 // ── Public init ────────────────────────────────────────────────────────────
 
+// ── Add to cart (event delegation on the grid) ────────────────────────────
+
+function wireAddToCart() {
+  grid.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.add-to-cart-btn');
+    if (!btn) return;
+
+    const { productId } = btn.dataset;
+    if (!productId) return;
+
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Adding…';
+
+    try {
+      await addItem(productId);
+      btn.textContent = 'Added ✓';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.disabled = false;
+      }, 1500);
+    } catch {
+      btn.textContent = 'Error';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.disabled = false;
+      }, 1500);
+    }
+  });
+}
+
 export function initProductListing() {
   // Guard: only run on pages that have the product grid
   if (!grid || !template) return;
@@ -338,6 +370,7 @@ export function initProductListing() {
   wirePagination();
   wireSearch();
   wireCategory();
+  wireAddToCart();
 
   // Restore state on browser back/forward navigation
   window.addEventListener('popstate', () => {

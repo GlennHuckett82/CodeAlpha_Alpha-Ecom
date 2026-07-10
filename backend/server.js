@@ -132,7 +132,14 @@ app.use(
       if (filePath.endsWith('.html')) {
         res.setHeader('Cache-Control', 'no-cache');
       } else if (filePath.endsWith('.css') || filePath.endsWith('.js')) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        // Production: long-lived immutable cache — URLs carry a content hash (?v=<hash>).
+        // Development: no-cache so edits to JS/CSS are always reflected without
+        // clearing the browser cache manually (ES modules are otherwise stuck for 1 year).
+        const isProd = process.env.NODE_ENV === 'production';
+        res.setHeader(
+          'Cache-Control',
+          isProd ? 'public, max-age=31536000, immutable' : 'no-cache',
+        );
       }
     },
   }),
