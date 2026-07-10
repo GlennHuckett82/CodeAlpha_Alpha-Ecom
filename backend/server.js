@@ -13,7 +13,16 @@ const path = require('path'); // Node built-in — needed for static file servin
 const app = express();
 
 // ─── Security & Utility Middleware ───────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      // Allow product images from Unsplash and Pexels CDNs.
+      // All other Helmet protections remain fully active.
+      'img-src': ["'self'", 'data:', 'https://images.unsplash.com', 'https://images.pexels.com'],
+    },
+  },
+}));
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors({

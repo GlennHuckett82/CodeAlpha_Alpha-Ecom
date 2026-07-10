@@ -27,8 +27,9 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
-// picsum.photos gives deterministic placeholder images — same seed = same photo.
-const img = (seed) => `https://picsum.photos/seed/${seed}/400/300`;
+// CDN helpers — IDs verified free (no Unsplash+ / Pexels licence required).
+const unsplash = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=400&h=300&q=80`;
+const pexels   = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop`;
 
 const SEED_PRODUCTS = [
   // ── Electronics ──────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ const SEED_PRODUCTS = [
     price: 79.99,
     category: 'electronics',
     stock: 48,
-    imageUrl: img('headphones'),
+    imageUrl: unsplash('1546435770-a3e426bf472b'),
   },
   {
     name: 'Mechanical Gaming Keyboard',
@@ -46,7 +47,7 @@ const SEED_PRODUCTS = [
     price: 129.99,
     category: 'electronics',
     stock: 23,
-    imageUrl: img('keyboard'),
+    imageUrl: pexels('9020272'),
   },
   {
     name: '4K USB-C Webcam',
@@ -54,7 +55,7 @@ const SEED_PRODUCTS = [
     price: 89.99,
     category: 'electronics',
     stock: 15,
-    imageUrl: img('webcam'),
+    imageUrl: pexels('7172701'),
   },
   {
     name: 'USB-C Hub 7-in-1',
@@ -62,7 +63,7 @@ const SEED_PRODUCTS = [
     price: 44.99,
     category: 'electronics',
     stock: 60,
-    imageUrl: img('hub'),
+    imageUrl: pexels('4195404'),
   },
   {
     name: 'Portable Bluetooth Speaker',
@@ -70,7 +71,7 @@ const SEED_PRODUCTS = [
     price: 59.99,
     category: 'electronics',
     stock: 35,
-    imageUrl: img('speaker'),
+    imageUrl: pexels('4917455'),
   },
   // ── Clothing ─────────────────────────────────────────────────────────────
   {
@@ -79,7 +80,7 @@ const SEED_PRODUCTS = [
     price: 89.99,
     category: 'clothing',
     stock: 40,
-    imageUrl: img('running-shoes'),
+    imageUrl: unsplash('1542291026-7eec264c27ff'),
   },
   {
     name: 'Merino Wool Hoodie',
@@ -87,7 +88,7 @@ const SEED_PRODUCTS = [
     price: 65.00,
     category: 'clothing',
     stock: 28,
-    imageUrl: img('hoodie'),
+    imageUrl: pexels('5840463'),
   },
   {
     name: 'Waterproof Hiking Jacket',
@@ -95,7 +96,7 @@ const SEED_PRODUCTS = [
     price: 119.99,
     category: 'clothing',
     stock: 17,
-    imageUrl: img('jacket'),
+    imageUrl: unsplash('1543274747-e969ff86c466'),
   },
   {
     name: 'Compression Training Shorts',
@@ -103,7 +104,7 @@ const SEED_PRODUCTS = [
     price: 34.99,
     category: 'clothing',
     stock: 55,
-    imageUrl: img('shorts'),
+    imageUrl: pexels('29259722'),
   },
   {
     name: 'Classic Oxford Shirt',
@@ -111,7 +112,7 @@ const SEED_PRODUCTS = [
     price: 49.99,
     category: 'clothing',
     stock: 44,
-    imageUrl: img('shirt'),
+    imageUrl: unsplash('1770058428099-f2d64ab34006'),
   },
   // ── Sports ───────────────────────────────────────────────────────────────
   {
@@ -120,7 +121,7 @@ const SEED_PRODUCTS = [
     price: 34.99,
     category: 'sports',
     stock: 70,
-    imageUrl: img('yoga-mat'),
+    imageUrl: pexels('4325439'),
   },
   {
     name: 'Resistance Band Set',
@@ -128,7 +129,7 @@ const SEED_PRODUCTS = [
     price: 19.99,
     category: 'sports',
     stock: 90,
-    imageUrl: img('resistance-bands'),
+    imageUrl: pexels('6516206'),
   },
   {
     name: 'Adjustable Dumbbell 20 kg',
@@ -136,7 +137,7 @@ const SEED_PRODUCTS = [
     price: 89.99,
     category: 'sports',
     stock: 12,
-    imageUrl: img('dumbbell'),
+    imageUrl: unsplash('1685633224688-6a77675eb119'),
   },
   {
     name: 'High-Density Foam Roller',
@@ -144,7 +145,7 @@ const SEED_PRODUCTS = [
     price: 24.99,
     category: 'sports',
     stock: 65,
-    imageUrl: img('foam-roller'),
+    imageUrl: pexels('6207519'),
   },
   {
     name: 'Speed Jump Rope',
@@ -152,7 +153,7 @@ const SEED_PRODUCTS = [
     price: 14.99,
     category: 'sports',
     stock: 80,
-    imageUrl: img('jump-rope'),
+    imageUrl: unsplash('1514994667787-b48ca37155f0'),
   },
   // ── Books ─────────────────────────────────────────────────────────────────
   {
@@ -161,7 +162,7 @@ const SEED_PRODUCTS = [
     price: 24.99,
     category: 'books',
     stock: 30,
-    imageUrl: img('js-book'),
+    imageUrl: unsplash('1497633762265-9d179a990aa6'),
   },
   {
     name: 'Clean Code',
@@ -169,7 +170,7 @@ const SEED_PRODUCTS = [
     price: 29.99,
     category: 'books',
     stock: 25,
-    imageUrl: img('clean-code'),
+    imageUrl: pexels('3861951'),
   },
   {
     name: 'The Pragmatic Programmer',
@@ -177,7 +178,7 @@ const SEED_PRODUCTS = [
     price: 34.99,
     category: 'books',
     stock: 22,
-    imageUrl: img('pragmatic'),
+    imageUrl: pexels('9553905'),
   },
   {
     name: 'Designing Data-Intensive Applications',
@@ -185,7 +186,7 @@ const SEED_PRODUCTS = [
     price: 39.99,
     category: 'books',
     stock: 18,
-    imageUrl: img('ddia'),
+    imageUrl: pexels('5480781'),
   },
   {
     name: "You Don't Know JS",
@@ -193,7 +194,7 @@ const SEED_PRODUCTS = [
     price: 27.99,
     category: 'books',
     stock: 33,
-    imageUrl: img('ydkjs'),
+    imageUrl: pexels('4578665'),
   },
 ];
 
